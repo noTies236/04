@@ -71,8 +71,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\glfw-3.4\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\glfw-3.4\build\src\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\wallyson\source\repos\04\lib\include\includeGlad;C:\Users\wallyson\source\repos\04\lib\include\includeGLFW;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\lib\\build\;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>C:\Users\wallyson\lib\glad\include;C:\Users\wallyson\lib\glfw-3.4\glfw-3.4\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -132,12 +135,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Downloads\glad\src\glad.c" />
+    <ClCompile Include="..\..\..\lib\glad\src\glad.c" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Pipeline\Pipeline.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Pipeline\Pipeline.h" />
+    <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\OpenGL\frag.glsl" />

@@ -3,6 +3,7 @@
 #include "fstream"
 #include "vector"
 #include "string"
+#include <array>
 
 // Headers
 #include "Pipeline.h"
@@ -17,13 +18,17 @@ GLuint gVertex;
 GLuint gFragment;
 
 // Program
-GLuint gProgramPipeline = 0;
+//GLuint gProgramPipeline = 0;
+GLuint Pipeline::gProgramPipeline = 0;
+GLuint Pipeline::ImageBuffer::texture = 0;
 
 namespace Pipeline {
 
     // Função para carregar o shader a partir de um arquivo
     std::string LoadShaderAsString(const std::string& fileName)
     {
+        //std::cout << fileName;
+
         std::string result = "";
         std::string line = "";
         std::ifstream myFile(fileName.c_str());
@@ -45,45 +50,45 @@ namespace Pipeline {
         glGenVertexArrays(1, &VAO);
         glBindVertexArray(VAO);
 
-        std::vector<GLfloat> vertexData{
-             -0.5f, -0.5f, 0.0f,  // Base esquerda
-             1.0f, 0.0f, 0.0f,   // color
-             0.5f, -0.5f, 0.0f,  // Base direita
-             0.0f, 1.0f, 0.0f,   // color
-             -0.5f, 0.5f, 0.0f,   // Ponta superior
-             0.0f, 0.0f, 1.0f,    // color
-          
-             0.5f, -0.5f, 0.0f,  // Base esquerda
-             0.0f, 1.0f, 0.0f,   // color
-             0.5f, 0.5f, 0.0f,  // Base direita
-             0.0f, 0.0f, 1.0f,   // color
-             -0.5f, 0.5f, 0.0f,   // Ponta superior
-             0.0f, 0.0f, 1.0f,    // color
+        struct Vertex {
+            float position[3];   
+            float normal[3];     // nx, ny, nz
+            float texCoord[2];   // u, v
         };
-        
-        // Criar e configurar VBO para posição
+
+       /* std::vector<Vertex> houseVertices {
+            { {0.5f, 1.0f, 2.0f}, { 0.0f, 0.0f, 1.0f}, { 0.0f, 0.0f} },
+            { { -0.5f, 0.0f, 2.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f} },
+            { { 0.0f, 1.0f , 2.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f} },
+		};*/
+
+		/*std::vector<float> houseVertices {
+             0.0f, 1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  0.8f, 0.0f,
+            -1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 7.0f,
+             1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  0.4f, 1.0f
+		};*/
+
+        Vertex houseVertices[] {
+            { {0.0f, 1.0f, 0.0f}, { 0.0f, 0.0f, 1.0f}, { 0.5f, 1.0f} },
+            { { -1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f} },
+            { { 1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, { 1.0f, 0.0f} }
+		};
+
         glGenBuffers(1, &VBO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), vertexData.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(houseVertices), houseVertices, GL_STATIC_DRAW);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 
-                              3, 
-             GL_FLOAT, GL_FALSE, 
-             sizeof(GL_FLOAT)*6, 
-                      (void*)0);
-
-        // color information
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * 8, (void*)0);
+		
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, // Índice do atributo (1 corresponde a 'aColor' no shader)
-                              3, // O atributo tem 3 componentes (vermelho, verde, azul)
-                       GL_FLOAT, // O tipo dos dados é GL_FLOAT (valores de ponto flutuante)
-                       GL_FALSE, // Não precisa normalizar os dados (não estamos usando inteiros ou valores em um intervalo)
-               sizeof(GL_FLOAT) * 6, //  O 'stride' é a distância entre dois vértices consecutivos (6 valores para cada vértice)
-            (GLvoid*)(sizeof(GL_FLOAT) * 3)); // O 'offset' é o ponto onde começa a cor (3 valores para a posição)
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * 8, (GLvoid*)(sizeof(GL_FLOAT) * 3));
 
-        // Desativar VAO depois de configurar tudo
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * 8, (GLvoid*)(sizeof(GL_FLOAT) * 6));
+
         glBindVertexArray(0);
+        Pipeline::Debug::error();
     }
 
     // Função para compilar o shader
@@ -103,6 +108,7 @@ namespace Pipeline {
             glGetShaderInfoLog(shaderObject, 512, NULL, infoLog);
             std::cout << "Erro na compilação do shader: " << infoLog << std::endl;
         }
+        Pipeline::Debug::error();
 
         return shaderObject;
     }
@@ -118,6 +124,7 @@ namespace Pipeline {
         glAttachShader(programObject, myVertexShader);
         glAttachShader(programObject, myFragmentShader);
         glLinkProgram(programObject);
+        Pipeline::Debug::error();
 
         return programObject;
     }
@@ -125,35 +132,74 @@ namespace Pipeline {
     // Função para configurar o pipeline gráfico
     void GraphicsPipeline()
     {
-        std::cout << "GraphicsPipeline\n";
-
         std::string vertexShaderSource = LoadShaderAsString("./Shaders/OpenGL/vert.glsl");
         std::string fragmentShaderSource = LoadShaderAsString("./Shaders/OpenGL/frag.glsl");
 
-        gProgramPipeline = CreateShaderProgram(vertexShaderSource, fragmentShaderSource);
+        Pipeline::gProgramPipeline = CreateShaderProgram(vertexShaderSource, fragmentShaderSource);
     }
 
-    // Função para preparar a tela para desenhar
     void PreDraw()
     {
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
+        //glDisable(GL_DEPTH_TEST);
+        //glDisable(GL_CULL_FACE);
 
-        glViewport(0, 0, 640, 480);
-        glClearColor(0.f, 1.f, 1.f, 1.f);
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        glUseProgram(gProgramPipeline);
-    }
-
-    // Função para desenhar o triângulo
-    void Draw()
-    {
+        //glViewport(0, 0, 640, 480);
+        //glClearColor(0.f, 1.f, 1.f, 1.f);
+        //glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        //glUseProgram(Pipeline::gProgramPipeline);
         VertexSpecification();
         GraphicsPipeline();
-        PreDraw();
 
-        glUseProgram(gProgramPipeline); // Ativar o shader antes de desenhar
+    }
+
+    void Draw()
+    {
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glUseProgram(Pipeline::gProgramPipeline); // Ativar o shader antes de desenhar
+        glBindTexture(GL_TEXTURE_2D, Pipeline::ImageBuffer::texture);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+
+     namespace ImageBuffer {
+        void loadImage(const std::string& fileName, GLuint& texture)
+        {
+            // back in here: i wanna know why do i have to pass &texture into glGenTexture
+            glGenTextures(1, &texture);
+            glBindTexture(GL_TEXTURE_2D, texture);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            int width, height, channels;
+
+            stbi_set_flip_vertically_on_load(true);
+            unsigned char* data = stbi_load(fileName.c_str(), &width, &height, &channels, 0);
+
+            if (data) {
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+                glGenerateMipmap(GL_TEXTURE_2D);
+            }
+            else {
+                std::cout << "Failed to load texture" << std::endl;
+            }
+            
+			stbi_image_free(data);
+        }
+	 }
+
+    namespace Debug
+    {
+        void error()
+		{
+            GLenum err;
+
+            while ((err = glGetError()) != GL_NO_ERROR) {
+				std::cout << "OpenGL Error: " << err << std::endl;
+            }
+        }
     }
 }
+
+

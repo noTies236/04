@@ -1,6 +1,8 @@
 #include <glad/glad.h>
+#include "../stb_image.h"
 
 namespace Pipeline {
+	extern GLuint gProgramPipeline;
 	std::string LoadShaderAsString(const std::string& fileName);
 	void		VertexSpecification();
 	GLuint		CompileShaderProgram(GLuint type, const std::string& source);
@@ -8,4 +10,14 @@ namespace Pipeline {
 	void		GraphcisPipiline();
 	void        PreDraw();
 	void        Draw();
+	
+	namespace ImageBuffer {
+		extern GLuint texture;
+		void loadImage(const std::string& fileName, GLuint& texture);
+		void debug();
+	}
+
+	namespace Debug {
+		void error();
+	}
 }

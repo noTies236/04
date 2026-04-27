@@ -1,10 +1,9 @@
 // Lib
+#define STB_IMAGE_IMPLEMENTATION
 #include <iostream>
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
-/* GLFW: It provides a simple interface for creating the program's window and (optionally) an OpenGL or Vulkan graphics context/device, and 
-for receiving user input from various devices, including keyboard, mouse, controllers and joysticks. It provides this on many platforms, which 
-is something that would otherwise take quite a while to program yourself.*/
+//#include <glfw3.h>
+#include "../../../../../../../../../../../../../../Users/wallyson/lib/glfw-3.4/glfw-3.4/include/GLFW/glfw3.h"
 #include <vector>
 
 // Headers
@@ -32,12 +31,15 @@ int main()
 		glfwTerminate();
 		return -1;
 	}
-
+	
+	Pipeline::ImageBuffer::loadImage("C:/Users/wallyson/Downloads/img-1023083-flash.jpg", Pipeline::ImageBuffer::texture);
+	
+	Pipeline::PreDraw();
 	while (!glfwWindowShouldClose(window)) {
-		glfwSwapBuffers(window);
 		glfwPollEvents();
-
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		Pipeline::Draw();
+		glfwSwapBuffers(window);
 	}
 
 	glfwTerminate();
